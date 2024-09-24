@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 @serve.deployment(num_replicas=2, ray_actor_options={"num_gpus": 1})
 class LlamaModel:
     def __init__(self):
-        model_name = "meta-llama/Llama-7B"
+        model_name = "meta-llama/Meta-Llama-3.1-8B"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         with init_empty_weights():
