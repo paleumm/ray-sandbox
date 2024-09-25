@@ -5,15 +5,14 @@
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
-  name: rayservice-llama-7b
+  name: rayservice-llama-8b
 spec:
   # serveConfigV2 takes a yaml multi-line scalar, which should be a Ray Serve multi-application config. See https://docs.ray.io/en/latest/serve/multi-app.html.
   serveConfigV2: |
     applications:
       - name: llama31
         import_path: llama.llama-8b.llama_deploy
-        route_prefix: /7b
-        runtime_env:
+        route_prefix: /8b
           working_dir: "https://github.com/paleumm/ray-sandbox/archive/refs/heads/main.zip"
         deployments:
           - name: LlamaModel
@@ -36,14 +35,17 @@ spec:
         spec:
           containers:
             - name: ray-head
-              image: rayproject/ray-ml:2.34.0.fc8721-py310
+              image: rayproject/ray-ml:2.34.0.fc8721-py310-cu121
+              env:
+                - name: HF_TOKEN
+                  value: "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"
               resources:
                 limits:
-                  cpu: 2
                   memory: 64Gi
+                  nvidia.com/gpu: "1"
                 requests:
-                  cpu: 2
                   memory: 32Gi
+                  nvidia.com/gpu: "1"
               ports:
                 - containerPort: 6379
                   name: gcs-server
@@ -59,7 +61,7 @@ spec:
         minReplicas: 1
         maxReplicas: 5
         # logical group name, for this called small-group, also can be functional
-        groupName: small-group
+        groupName: worker-group
         # The `rayStartParams` are used to configure the `ray start` command.
         # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/rayStartParams.md for the default settings of `rayStartParams` in KubeRay.
         # See https://docs.ray.io/en/latest/cluster/cli.html#ray-start for all available options in `rayStartParams`.
@@ -74,6 +76,9 @@ spec:
                   preStop:
                     exec:
                       command: ["/bin/sh", "-c", "ray stop"]
+                env:
+                  - name: HF_TOKEN
+                    value: "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"
                 resources:
                   limits:
                     # cpu: "1"
